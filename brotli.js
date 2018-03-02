@@ -12,5 +12,8 @@ const options = {
     quality: argv.quality != null ? argv.quality : 11, 
     lgwin: argv.lgwin != null ? argv.lgwin : 22
 };
-compressor.brotliCompress(argv._, options);
+if (argv.silent) {
+    options.silent = true;
+}
+compressor.compress(argv._, options, 'brotli');
 
