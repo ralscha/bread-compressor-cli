@@ -21,12 +21,13 @@ function parseArgs(algorithm) {
 		.version('1.0.0')
 		.usage('[options] <globs ...>')
 		.option('-s, --stats', 'Show statistics')
-		.option('-n, --no-default-ignores', 'Do not add default ignores "!(*.gz|*.br)"')
-		.option('--zopfli-numiterations [value]', 'Maximum amount of times to rerun forward and backward pass to optimize LZ77 compression cost. Good values: 10, 15 for small files, 5 for files over several MB in size or it will be too slow. (default: 15)')
+		.option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip" (default "brotli,gzip")', items=>items.split(','))
+		.option('-n, --no-default-ignores', 'Do not add default ignores')
+		.option('--zopfli-numiterations [value]', 'Maximum amount of times to rerun forward and backward pass to optimize LZ77 compression cost. Good values: 10, 15 for small files, 5 for files over several MB in size or it will be too slow. (default: 15)', parseInt)
 		.option('--zopfli-blocksplittinglast [value]', 'If "true", chooses the optimal block split points only after doing the iterative LZ77 compression. If "false", chooses the block split points first, then does iterative LZ77 on each individual block. If "both", first runs with false, then with true and keeps the smaller file. (default: "false")')
-		.option('--brotli-mode [value]', '0 = generic, 1 = text (default), 2 = font (WOFF2)')
-		.option('--brotli-quality [value]', '0 - 11, (default: 11)')
-		.option('--brotli-lgwin [value]', 'window size (default: 22)')
+		.option('--brotli-mode [value]', '0 = generic, 1 = text (default), 2 = font (WOFF2)', parseInt)
+		.option('--brotli-quality [value]', '0 - 11, (default: 11)', parseInt)
+		.option('--brotli-lgwin [value]', 'window size (default: 22)', parseInt)
 		.parse(process.argv);
 }
 
@@ -46,6 +47,10 @@ async function compress(algorithm) {
 	parseArgs(algorithm);
 	if (!program.args || program.args.length === 0) {
 		program.help();
+	}
+
+	if (program.algorithm != null && program.algorithm.indexOf(algorithm) === -1) {
+		return;
 	}
 
 	const globs = addDefaultIgnores();

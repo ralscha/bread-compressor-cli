@@ -6,9 +6,7 @@
   "repository": "https://github.com/ralscha/parcel-plugin-compress",
   "author": "Ralph Schaer <ralphschaer@gmail.com>",
   "bin": {
-    "brotli-compressor": "./brotli.js",
-    "zopfli-compressor": "./zopfli.js",
-    "bread-compressor": "./bread.js"
+    "bread-compressor": "./bin.js"
   },
   "keywords": [
     "zopfli",
