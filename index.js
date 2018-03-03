@@ -10,23 +10,66 @@ const limit = promiseLimit(2)
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
+const program = require('commander');
+
 module.exports = {
 	compress
 }
 
-async function compress(globs, options, algorithm) {
-	const paths = globby.sync([...globs, '!(*.gz|*.br)'], { onlyFiles: true });
+function parseArgs(algorithm) {
+	program
+		.version('1.0.0')
+		.usage('[options] <globs ...>')
+		.option('-s, --stats', 'Show statistics')
+		.option('-n, --no-default-ignores', 'Do not add default ignores "!(*.gz|*.br)"')
+		.option('--zopfli-numiterations [value]', 'Maximum amount of times to rerun forward and backward pass to optimize LZ77 compression cost. Good values: 10, 15 for small files, 5 for files over several MB in size or it will be too slow. (default: 15)')
+		.option('--zopfli-blocksplittinglast [value]', 'If "true", chooses the optimal block split points only after doing the iterative LZ77 compression. If "false", chooses the block split points first, then does iterative LZ77 on each individual block. If "both", first runs with false, then with true and keeps the smaller file. (default: "false")')
+		.option('--brotli-mode [value]', '0 = generic, 1 = text (default), 2 = font (WOFF2)')
+		.option('--brotli-quality [value]', '0 - 11, (default: 11)')
+		.option('--brotli-lgwin [value]', 'window size (default: 22)')
+		.parse(process.argv);
+}
+
+function addDefaultIgnores() {
+	if (program.defaultIgnores) {
+		const globs = program.args.slice();
+		for (ignore of ['gz', 'br', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2']) {
+			globs.push('!*.' + ignore);
+			globs.push('!**/*.' + ignore);
+		}
+		return globs;
+	}
+	return program.args;
+}
+
+async function compress(algorithm) {
+	parseArgs(algorithm);
+	if (!program.args || program.args.length === 0) {
+		program.help();
+	}
+
+	const globs = addDefaultIgnores();
+
+	const paths = globby.sync([...globs], { onlyFiles: true });
 	const start = Date.now();
 
 	let results;
 	if (algorithm === 'brotli') {
+		const options = {
+			mode: program.brotliMode != null ? program.brotliMode : 1,
+			quality: program.brotliQuality != null ? program.brotliQuality : 11,
+			lgwin: program.brotliLgwin != null ? program.brotliLgwin : 22
+		};
 		results = await Promise.all(paths.map(name => limit(() => brotliCompressFile(name, options))));
 	}
 	else {
+		const options = {
+			numiterations: program.zopfliNumiterations != null ? program.zopfliNumiterations : 15,
+		};
 		results = await Promise.all(paths.map(name => limit(() => zopfliCompressFile(name, options))));
 	}
 
-	if (!options.silent) {
+	if (program.stats && results && results.length > 0) {
 		const elapsedTime = (Date.now() - start) / 1000;
 		const uncompressedSize = paths
 			.map(fs.statSync)
@@ -43,14 +86,27 @@ async function compress(globs, options, algorithm) {
 		console.log(chalk`Compression Time : {bold ${elapsedTime}} s`);
 		console.log();
 	}
+
+	return results;
 }
 
 async function zopfliCompressFile(file, options) {
 	const stat = fs.statSync(file);
 	const content = await readFile(file);
 
-	const compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
-	const compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
+	let compressed1 = null;
+	let compressed2 = null;
+
+	if (program.zopfliBlocksplittinglast === 'true') {
+		compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
+	}
+	else if (program.zopfliBlocksplittinglast === 'both') {
+		compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
+		compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
+	}
+	else {
+		compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
+	}
 
 	if (compressed1 !== null && compressed1.length < stat.size) {
 		if (compressed2 !== null && compressed2.length < compressed1.length) {
