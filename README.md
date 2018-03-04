@@ -8,18 +8,18 @@ npm install bread-compressor-cli -D
 
 
 ## Usage
-You can call the tool with npx.
+Call the tool with npx
 ```
 npx bread-compressor dist
 ```
 
-Or insert a script in package.json
+or insert a script in package.json
 ```
  "scripts": {
 	"compress": "bread-compressor dist"
   },
 ```
-and call it with npm
+and run it with npm
 ```
 npm run compress
 ```
