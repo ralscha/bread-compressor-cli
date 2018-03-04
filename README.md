@@ -36,19 +36,19 @@ bread-compressor -n dist
 #### Glob
 You can specify multiple paths in one call, the tool processes all files that match the globs.
 
-Compress files in dist and www folder and subfolders.
+Compress files in *dist* and *www* folder and subfolders.
 ``` 
 bread-compressor dist www
 ```
-These globs are shortcuts for dist/**/* and www/**/*
+These globs are shortcuts for dist/\*\*/* and www/\*\*/*
 
 
-Only compress css, js and html files in the dist folder and subfolders.
+Only compress *.css*, *.js* and *.html* files in the *dist* folder and subfolders.
 ``` 
 bread-compressor dist/**/*.css dist/**/*.js dist/**/*.html
 ```
 
-Compress files in dist folder and subfolder, except big.txt and files ending with .pdf
+Compress files in *dist* folder and subfolder, except *big.txt* and files ending with *.pdf*
 ```
 bread-compressor dist !big.txt !*.pdf
 ```
@@ -58,22 +58,22 @@ https://github.com/sindresorhus/globby
 
 
 #### Algorithm
-The tool compresses the files by default with gzip and brotli. You can set the -a option 
+The tool compresses the files by default with gzip and brotli. You can set the `-a` option 
 if you only want to compress with gzip or brotli.
 
-Compress the files only with gzip
+Compress only with gzip
 ```
 bread-compressor -a gzip dist
 ```
 
-Compress the files only with brotli
+Compress only with brotli
 ```
 bread-compressor -a brotli dist
 ```
 
 
 #### Statistics
-The tool prints out a summary if you specify the `-s` option. 
+The tool prints out a summary with the `-s` option. 
 
 ```
 bread-compressor -s dist
