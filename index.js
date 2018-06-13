@@ -1,7 +1,7 @@
 const fs = require('fs');
 const globby = require('globby');
 const promiseLimit = require('promise-limit')
-const util = require('util');
+const fork = require('child_process').fork;
 const chalk = require('chalk');
 
 const program = require('commander');
@@ -64,13 +64,13 @@ async function compress(algorithm) {
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
-				const process = fork('./brotli-compress.js');
+				const child = fork('./brotli-compress.js');
 
-				process.send({ name: name, options: options });
+				child.send({ name: name, options: options });
 
-				process.on('message', (message) => {
-					console.log("got message", message);
-					resolve();
+				child.on('message', (message) => {
+					child.kill();
+					resolve(message);
 				});
 			});
 		})));
@@ -81,13 +81,13 @@ async function compress(algorithm) {
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
-				const process = fork('./brotli-compress.js');
+				const child = fork('./brotli-compress.js');
 
-				process.send({ name: name, options: options });
+				child.send({ name: name, options: options });
 
-				process.on('message', (message) => {
-					console.log("got message", message);
-					resolve();
+				child.on('message', (message) => {
+					child.kill();
+					resolve(message);
 				});
 			});
 		})));
