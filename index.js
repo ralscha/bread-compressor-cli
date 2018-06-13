@@ -2,6 +2,7 @@ const fs = require('fs');
 const globby = require('globby');
 const promiseLimit = require('promise-limit')
 const fork = require('child_process').fork;
+const os = require('os');
 const chalk = require('chalk');
 
 const program = require('commander');
@@ -53,7 +54,7 @@ async function compress(algorithm) {
 	const paths = globby.sync([...globs], { onlyFiles: true });
 	const start = Date.now();
 
-	const limit = promiseLimit(program.limit ? program.limit : 2);
+	const limit = promiseLimit(program.limit ? program.limit : os.cpus().length);
 	
 	let results;
 	if (algorithm === 'brotli') {
