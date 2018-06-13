@@ -78,10 +78,11 @@ async function compress(algorithm) {
 	else {
 		const options = {
 			numiterations: program.zopfliNumiterations != null ? program.zopfliNumiterations : 15,
+			zopfliBlocksplittinglast: program.zopfliBlocksplittinglast,
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
-				const child = fork('./brotli-compress.js');
+				const child = fork('./gzip-compress.js');
 
 				child.send({ name: name, options: options });
 

@@ -8,21 +8,21 @@ const writeFile = util.promisify(fs.writeFile);
 async function zopfliCompressFile(file, options) {
     const stat = fs.statSync(file);
     const content = await readFile(file);
-
+    
     let compressed1 = null;
     let compressed2 = null;
-
-    if (program.zopfliBlocksplittinglast === 'true') {
+    
+    if (options.zopfliBlocksplittinglast === 'true') {
         compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
     }
-    else if (program.zopfliBlocksplittinglast === 'both') {
+    else if (options.zopfliBlocksplittinglast === 'both') {
         compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
         compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
     }
     else {
         compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
     }
-
+    
     if (compressed1 !== null && compressed1.length < stat.size) {
         if (compressed2 !== null && compressed2.length < compressed1.length) {
             await writeFile(file + '.gz', compressed2);
