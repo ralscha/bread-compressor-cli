@@ -1,13 +1,9 @@
 const fs = require('fs');
 const globby = require('globby');
-const zopfli = require('@gfx/zopfli');
-const brotli = require('brotli');
 const promiseLimit = require('promise-limit')
-const util = require('util');
+const fork = require('child_process').fork;
+const os = require('os');
 const chalk = require('chalk');
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
 
 const program = require('commander');
 
@@ -22,7 +18,7 @@ function parseArgs(algorithm) {
 		.option('-s, --stats', 'Show statistics')
 		.option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items=>items.split(','))
 		.option('-n, --no-default-ignores', 'Do not add default glob ignores')
-		.option('-l, --limit <value>', 'Number of tasks running concurrently. Default 2', parseInt)
+		.option('-l, --limit <value>', 'Number of tasks running concurrently. Default is your total number of cores', parseInt)
 		.option('--zopfli-numiterations <value>', 'Maximum amount of times to rerun forward and backward pass to optimize LZ77 compression cost. Good values: 10, 15 for small files, 5 for files over several MB in size or it will be too slow. Default 15', parseInt)
 		.option('--zopfli-blocksplittinglast <value>', 'If "true", chooses the optimal block split points only after doing the iterative LZ77 compression. If "false", chooses the block split points first, then does iterative LZ77 on each individual block. If "both", first runs with false, then with true and keeps the smaller file. Default "false"')
 		.option('--brotli-mode <value>', '0 = generic, 1 = text (default), 2 = font (WOFF2)', parseInt)
@@ -58,7 +54,7 @@ async function compress(algorithm) {
 	const paths = globby.sync([...globs], { onlyFiles: true });
 	const start = Date.now();
 
-	const limit = promiseLimit(program.limit ? program.limit : 2);
+	const limit = promiseLimit(program.limit ? program.limit : os.cpus().length);
 	
 	let results;
 	if (algorithm === 'brotli') {
@@ -67,13 +63,36 @@ async function compress(algorithm) {
 			quality: program.brotliQuality != null ? program.brotliQuality : 11,
 			lgwin: program.brotliLgwin != null ? program.brotliLgwin : 22
 		};
-		results = await Promise.all(paths.map(name => limit(() => brotliCompressFile(name, options))));
+		results = await Promise.all(paths.map(name => limit(() => {
+			return new Promise(function (resolve) {
+				const child = fork('./brotli-compress.js');
+
+				child.send({ name: name, options: options });
+
+				child.on('message', (message) => {
+					child.kill();
+					resolve(message);
+				});
+			});
+		})));
 	}
 	else {
 		const options = {
 			numiterations: program.zopfliNumiterations != null ? program.zopfliNumiterations : 15,
+			zopfliBlocksplittinglast: program.zopfliBlocksplittinglast,
 		};
-		results = await Promise.all(paths.map(name => limit(() => zopfliCompressFile(name, options))));
+		results = await Promise.all(paths.map(name => limit(() => {
+			return new Promise(function (resolve) {
+				const child = fork('./gzip-compress.js');
+
+				child.send({ name: name, options: options });
+
+				child.on('message', (message) => {
+					child.kill();
+					resolve(message);
+				});
+			});
+		})));
 	}
 
 	if (program.stats && results && results.length > 0) {
@@ -96,64 +115,3 @@ async function compress(algorithm) {
 
 	return results;
 }
-
-async function zopfliCompressFile(file, options) {
-	const stat = fs.statSync(file);
-	const content = await readFile(file);
-
-	let compressed1 = null;
-	let compressed2 = null;
-
-	if (program.zopfliBlocksplittinglast === 'true') {
-		compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
-	}
-	else if (program.zopfliBlocksplittinglast === 'both') {
-		compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
-		compressed2 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: true, blocksplittingmax: 15 });
-	}
-	else {
-		compressed1 = await zopfliPromisify(content, { numiterations: options.numiterations, blocksplitting: true, blocksplittinglast: false, blocksplittingmax: 15 });
-	}
-
-	if (compressed1 !== null && compressed1.length < stat.size) {
-		if (compressed2 !== null && compressed2.length < compressed1.length) {
-			await writeFile(file + '.gz', compressed2);
-			return compressed2.length;
-		}
-		else {
-			await writeFile(file + '.gz', compressed1);
-			return compressed1.length;
-		}
-	}
-	else if (compressed2 !== null && compressed2.length < stat.size) {
-		await writeFile(file + '.gz', compressed2);
-		return compressed2.length;
-	}
-
-	return stat.size;
-}
-
-function zopfliPromisify(content, options) {
-	return new Promise((resolve, reject) => {
-		zopfli.gzip(content, options, (err, compressedContent) => {
-			if (!err) {
-				resolve(compressedContent);
-			}
-			else {
-				reject(err);
-			}
-		});
-	});
-}
-
-async function brotliCompressFile(file, options) {
-	const stat = fs.statSync(file);
-	const content = await readFile(file);
-	const compressedContent = brotli.compress(content, options);
-	if (compressedContent !== null && compressedContent.length < stat.size) {
-		await writeFile(file + '.br', compressedContent);
-		return compressedContent.length;
-	}
-	return stat.size;
-}
-
