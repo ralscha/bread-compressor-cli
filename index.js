@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const globby = require('globby');
 const promiseLimit = require('promise-limit')
 const fork = require('child_process').fork;
@@ -65,7 +66,7 @@ async function compress(algorithm) {
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
-				const child = fork('./brotli-compress.js');
+				const child = fork(path.resolve(__dirname, 'brotli-compress.js'));
 
 				child.send({ name: name, options: options });
 
@@ -83,7 +84,7 @@ async function compress(algorithm) {
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
-				const child = fork('./gzip-compress.js');
+				const child = fork(path.resolve(__dirname, 'gzip-compress.js'));
 
 				child.send({ name: name, options: options });
 
