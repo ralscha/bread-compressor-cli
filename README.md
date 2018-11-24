@@ -133,7 +133,7 @@ Other dependecies are [commander](https://github.com/tj/commander.js) for comman
 
 
 
-### Browser Support for Brotli
+## Browser Support for Brotli
 
 Current versions of the major browsers send `br` in the `Accept-Encoding` header when the request is sent over TLS
 
@@ -145,7 +145,7 @@ Support introduced in version ...
   * Safari 11
 
 
-### Server support
+## Server support
 
 To take advantage of precompressed resources you need a server that is able to understand the `Accept-Encoding` header and serve files ending with `.gz` and `.br` accordingly.
 
