@@ -162,7 +162,7 @@ To enable Brotli support you either
   * build Nginx from source with the [ngx_brotli](https://github.com/google/ngx_brotli) module from Google
   * or install a pre-built Nginx from ppa with the brotli module included:  
     https://gablaxian.com/blog/brotli-compression
-  * or you use the approach described in this blog post that works without the brotli module:    
+  * or use the approach described in this blog post that works without the brotli module:    
     https://siipo.la/blog/poor-mans-brotli-serving-brotli-files-without-nginx-brotli-module
 
 
