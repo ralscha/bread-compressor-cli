@@ -131,3 +131,48 @@ and [brotli](https://www.npmjs.com/package/brotli) for Brotli compression.
 
 Other dependecies are [commander](https://github.com/tj/commander.js) for command line argument parsing, [chalk](https://github.com/chalk/chalk) for terminal output styling,  [globby](https://github.com/sindresorhus/globby) for glob matching and [promise-limit](https://github.com/featurist/promise-limit) for limiting concurrent tasks. 
 
+
+
+### Browser Support for Brotli
+
+Current versions of the major browsers send `br` in the `Accept-Encoding` header when the request is sent over TLS
+
+Support introduced in version ...
+
+  * Edge 15
+  * Firefox 44
+  * Chrome 50
+  * Safari 11
+
+
+### Server support
+
+To take advantage of precompressed resources you need a server that is able to understand the `Accept-Encoding` header and serve files ending with `.gz` and `.br` accordingly.
+
+#### Nginx 
+Nginx supports Gzip compressed files out of the box with the `gzip_static` directive. 
+
+Add this to a `http`, `server` or `location` section and Nginx will automatically search for files ending with .gz when the request contains an `Accept-Encoding` header with the value `gzip`. 
+```
+gzip_static  on;  
+```
+See the [documentation](http://nginx.org/en/docs/http/ngx_http_gzip_static_module.html) for more information.
+
+To enable Brotli support you either 
+  * build Nginx from source with the [ngx_brotli](https://github.com/google/ngx_brotli) module from Google
+  * or install a pre-built Nginx from ppa with the brotli module included:  
+    https://gablaxian.com/blog/brotli-compression
+  * or you use the approach described in this blog post that works without the brotli module: 
+    https://siipo.la/blog/poor-mans-brotli-serving-brotli-files-without-nginx-brotli-module
+
+
+#### Apache HTTP
+https://css-tricks.com/brotli-static-compression/     
+https://blog.desgrange.net/post/2017/04/10/pre-compression-with-gzip-and-brotli-in-apache.html
+
+
+#### LightSpeed
+Support for Brotli introduced in version [5.2](https://www.litespeedtech.com/products/litespeed-web-server/release-log)
+
+
+
