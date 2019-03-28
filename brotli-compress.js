@@ -1,9 +1,11 @@
 const util = require('util');
 const fs = require('fs');
-const brotli = require('brotli');
+const brotliAdapter = require('./brotli-adapter');
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
+
+const brotli = brotliAdapter();
 
 async function brotliCompressFile(file, options) {
     const stat = fs.statSync(file);

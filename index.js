@@ -14,7 +14,7 @@ module.exports = {
 
 function parseArgs(algorithm) {
 	program
-		.version('1.0.0')
+		.version('1.0.6')
 		.usage('[options] <globs ...>')
 		.option('-s, --stats', 'Show statistics')
 		.option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items=>items.split(','))

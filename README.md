@@ -126,8 +126,8 @@ bread-compressor -l 4 dist
 
 
 ## Internals
-This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for GZip compression
-and [brotli](https://www.npmjs.com/package/brotli) for Brotli compression.
+This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) and [node-zopfli-es](https://github.com/jaeh/node-zopfli-es) for GZip compression
+and [brotli](https://www.npmjs.com/package/brotli) and [iltorb](https://github.com/MayhemYDG/iltorb) for Brotli compression.
 
 Other dependecies are [commander](https://github.com/tj/commander.js) for command line argument parsing, [chalk](https://github.com/chalk/chalk) for terminal output styling,  [globby](https://github.com/sindresorhus/globby) for glob matching and [promise-limit](https://github.com/featurist/promise-limit) for limiting concurrent tasks. 
 

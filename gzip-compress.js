@@ -1,9 +1,11 @@
 const util = require('util');
 const fs = require('fs');
-const zopfli = require('@gfx/zopfli');
+const zopfliAdapter = require('./zopfli-adapter');
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
+
+const zopfli = zopfliAdapter();
 
 async function zopfliCompressFile(file, options) {
     const stat = fs.statSync(file);
