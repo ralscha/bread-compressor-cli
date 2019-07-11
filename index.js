@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const globby = require('globby');
-const promiseLimit = require('promise-limit')
+const promiseLimit = require('promise-limit');
 const fork = require('child_process').fork;
 const os = require('os');
 const chalk = require('chalk');
@@ -10,7 +10,7 @@ const program = require('commander');
 
 module.exports = {
 	compress
-}
+};
 
 function parseArgs(algorithm) {
 	program
@@ -31,7 +31,7 @@ function parseArgs(algorithm) {
 function addDefaultIgnores() {
 	if (program.defaultIgnores) {
 		const globs = program.args.slice();
-		for (ignore of ['gz', 'br', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2']) {
+		for (const ignore of ['gz', 'br', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2']) {
 			globs.push('!*.' + ignore);
 			globs.push('!**/*.' + ignore);
 		}
