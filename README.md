@@ -45,12 +45,12 @@ These globs are shortcuts for dist/\*\*/* and www/\*\*/*
 
 Only compress *.css*, *.js* and *.html* files in the *dist* folder and subfolders.
 ``` 
-bread-compressor dist/**/*.css dist/**/*.js dist/**/*.html
+bread-compressor "dist/**/*.css" "dist/**/*.js" "dist/**/*.html"
 ```
 
 Compress files in *dist* folder and subfolder, except *big.txt* and files ending with *.pdf*
 ```
-bread-compressor dist !big.txt !*.pdf
+bread-compressor dist "!big.txt" "!*.pdf"
 ```
 
 See the globby project site for more information about the supported glob patterns:    
