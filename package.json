@@ -1,6 +1,6 @@
 {
   "name": "bread-compressor-cli",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "CLI tool compressing static resources with Brotli and Zopfli (gzip)",
   "license": "MIT",
   "repository": "https://github.com/ralscha/bread-compressor-cli",
@@ -23,7 +23,6 @@
     "promise-limit": "2.7.0"
   },
   "optionalDependencies": {
-    "iltorb": "2.4.5",
     "node-zopfli-es": "1.0.4"
   }
 }
