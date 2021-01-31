@@ -14,7 +14,7 @@ module.exports = {
 
 function parseArgs(algorithm) {
 	program
-		.version('1.0.6')
+		.version('1.1.1')
 		.usage('[options] <globs ...>')
 		.option('-s, --stats', 'Show statistics')
 		.option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items=>items.split(','))
@@ -29,7 +29,7 @@ function parseArgs(algorithm) {
 }
 
 function addDefaultIgnores() {
-	if (program.defaultIgnores) {
+	if (program.opts().defaultIgnores) {
 		const globs = program.args.slice();
 		for (const ignore of ['gz', 'br', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2']) {
 			globs.push('!*.' + ignore);
@@ -46,7 +46,9 @@ async function compress(algorithm) {
 		program.help();
 	}
 
-	if (program.algorithm != null && program.algorithm.indexOf(algorithm) === -1) {
+	const options = program.opts();
+
+	if (options.algorithm != null && options.algorithm.indexOf(algorithm) === -1) {
 		return;
 	}
 
@@ -55,14 +57,14 @@ async function compress(algorithm) {
 	const paths = globby.sync([...globs], { onlyFiles: true });
 	const start = Date.now();
 
-	const limit = promiseLimit(program.limit ? program.limit : os.cpus().length);
+	const limit = promiseLimit(options.limit ? options.limit : os.cpus().length);
 	
 	let results;
 	if (algorithm === 'brotli') {
 		const options = {
-			mode: program.brotliMode != null ? program.brotliMode : 1,
-			quality: program.brotliQuality != null ? program.brotliQuality : 11,
-			lgwin: program.brotliLgwin != null ? program.brotliLgwin : 22
+			mode: options.brotliMode != null ? options.brotliMode : 1,
+			quality: options.brotliQuality != null ? options.brotliQuality : 11,
+			lgwin: options.brotliLgwin != null ? options.brotliLgwin : 22
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
@@ -79,8 +81,8 @@ async function compress(algorithm) {
 	}
 	else {
 		const options = {
-			numiterations: program.zopfliNumiterations != null ? program.zopfliNumiterations : 15,
-			zopfliBlocksplittinglast: program.zopfliBlocksplittinglast,
+			numiterations: options.zopfliNumiterations != null ? options.zopfliNumiterations : 15,
+			zopfliBlocksplittinglast: options.zopfliBlocksplittinglast,
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
@@ -96,7 +98,7 @@ async function compress(algorithm) {
 		})));
 	}
 
-	if (program.stats && results && results.length > 0) {
+	if (options.stats && results && results.length > 0) {
 		const elapsedTime = (Date.now() - start) / 1000;
 		const uncompressedSize = paths
 			.map(fs.statSync)
