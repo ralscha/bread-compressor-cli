@@ -1,20 +1,17 @@
-const fs = require('fs');
-const path = require('path');
-const globby = require('globby');
-const promiseLimit = require('promise-limit');
-const fork = require('child_process').fork;
-const os = require('os');
-const chalk = require('chalk');
+import {globbySync} from 'globby';
+import {program} from "commander";
+import chalk from "chalk";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import promiseLimit from "promise-limit";
+import {fork} from "child_process";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const program = require('commander');
-
-module.exports = {
-	compress
-};
-
-function parseArgs(algorithm) {
+function parseArgs() {
 	program
-		.version('1.1.1')
+		.version('1.2.0')
 		.usage('[options] <globs ...>')
 		.option('-s, --stats', 'Show statistics')
 		.option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items=>items.split(','))
@@ -40,8 +37,8 @@ function addDefaultIgnores() {
 	return program.args;
 }
 
-async function compress(algorithm) {
-	parseArgs(algorithm);
+export async function compress(algorithm) {
+	parseArgs();
 	if (!program.args || program.args.length === 0) {
 		program.help();
 	}
@@ -54,45 +51,53 @@ async function compress(algorithm) {
 
 	const globs = addDefaultIgnores();
 
-	const paths = globby.sync([...globs], { onlyFiles: true });
+	const paths = globbySync([...globs]);
 	const start = Date.now();
-
 	const limit = promiseLimit(options.limit ? options.limit : os.cpus().length);
-	
+
 	let results;
 	if (algorithm === 'brotli') {
-		const options = {
+		const brotliOptions = {
 			mode: options.brotliMode != null ? options.brotliMode : 1,
 			quality: options.brotliQuality != null ? options.brotliQuality : 11,
 			lgwin: options.brotliLgwin != null ? options.brotliLgwin : 22
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
+				const __dirname = dirname(fileURLToPath(import.meta.url));
 				const child = fork(path.resolve(__dirname, 'brotli-compress.js'));
 
-				child.send({ name: name, options: options });
+				child.on('message', msg => {
+					if (msg.ready) {
+						child.send({ name: name, options: brotliOptions });
 
-				child.on('message', (message) => {
-					child.kill();
-					resolve(message);
+						child.on('message', (message) => {
+							child.kill();
+							resolve(message);
+						});
+					}
 				});
 			});
 		})));
 	}
 	else {
-		const options = {
+		const gzOptions = {
 			numiterations: options.zopfliNumiterations != null ? options.zopfliNumiterations : 15,
 			zopfliBlocksplittinglast: options.zopfliBlocksplittinglast,
 		};
 		results = await Promise.all(paths.map(name => limit(() => {
 			return new Promise(function (resolve) {
+				const __dirname = dirname(fileURLToPath(import.meta.url));
 				const child = fork(path.resolve(__dirname, 'gzip-compress.js'));
+				child.on('message', msg => {
+					if (msg.ready) {
+						child.send({ name: name, options: gzOptions });
 
-				child.send({ name: name, options: options });
-
-				child.on('message', (message) => {
-					child.kill();
-					resolve(message);
+						child.on('message', (message) => {
+							child.kill();
+							resolve(message);
+						});
+					}
 				});
 			});
 		})));

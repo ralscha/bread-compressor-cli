@@ -1,16 +1,13 @@
-const util = require('util');
-const fs = require('fs');
-const brotliAdapter = require('./brotli-adapter');
-const zlib = require('zlib');
+import * as fs from "fs";
+import * as util from "util";
+import * as zlib from "zlib";
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
-
-const brotli = brotliAdapter();
 
 async function brotliCompressFile(file, options) {
     const stat = fs.statSync(file);
     const content = await readFile(file);
-		if (brotli.isZlib) {			
+
 		  let brotliMode;
 		  if (options.mode === 1) {
 				brotliMode = zlib.constants.BROTLI_MODE_TEXT;
@@ -29,8 +26,8 @@ async function brotliCompressFile(file, options) {
 						[zlib.constants.BROTLI_PARAM_LGWIN]: options.lgwin
 					}
 			};
-		}
-    const compressedContent = brotli.compress(content, options);
+
+    const compressedContent = zlib.brotliCompressSync(content, options);
     if (compressedContent !== null && compressedContent.length < stat.size) {
         await writeFile(file + '.br', compressedContent);
         return compressedContent.length;
@@ -42,3 +39,5 @@ process.on('message', async (message) => {
     const file = await brotliCompressFile(message.name, message.options);
     process.send(file);
 });
+
+process.send({ ready: true });

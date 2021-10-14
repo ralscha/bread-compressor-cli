@@ -1,11 +1,12 @@
-const util = require('util');
-const fs = require('fs');
-const zopfliAdapter = require('./zopfli-adapter');
+import * as fs from "fs";
+import * as util from "util";
+import {zopfliAdapter} from "./zopfli-adapter.js";
+
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-const zopfli = zopfliAdapter();
+
 
 async function zopfliCompressFile(file, options) {
     const stat = fs.statSync(file);
@@ -43,7 +44,8 @@ async function zopfliCompressFile(file, options) {
     return stat.size;
 }
 
-function zopfliPromisify(content, options) {
+async function zopfliPromisify(content, options) {
+    const zopfli = await zopfliAdapter();
     return new Promise((resolve, reject) => {
         zopfli.gzip(content, options, (err, compressedContent) => {
             if (!err) {
@@ -60,3 +62,5 @@ process.on('message', async (message) => {
     const file = await zopfliCompressFile(message.name, message.options);
     process.send(file);
 });
+
+process.send({ ready: true });

@@ -117,7 +117,7 @@ See the project site of [brotli](https://www.npmjs.com/package/brotli) for more 
 
 
 #### Concurrent tasks
-By default two tasks will run concurrently. You can change this number with the `-l` option
+By default, two tasks will run concurrently. You can change this number with the `-l` option
 
 Run 4 compression tasks concurrently.
 ```
