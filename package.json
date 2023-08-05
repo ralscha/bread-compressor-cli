@@ -4,10 +4,13 @@
   "version": "2.0.0",
   "description": "CLI tool compressing static resources with Brotli and Zopfli (gzip)",
   "license": "MIT",
-  "repository": "https://github.com/ralscha/bread-compressor-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ralscha/bread-compressor-cli.git"
+  },
   "author": "Ralph Schaer <ralphschaer@gmail.com>",
   "bin": {
-    "bread-compressor": "./bin.js"
+    "bread-compressor": "bin.js"
   },
   "keywords": [
     "zopfli",
