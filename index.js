@@ -10,9 +10,7 @@ import {fork} from "child_process";
 import {fileURLToPath} from 'url';
 
 function parseArgs() {
-    console.log(program.opts());
-    console.log(len(program.opts()));
-    if (!program.opts()) {
+    if (Object.keys(program.opts()).length === 0) {
         program
             .version('3.0.3')
             .usage('[options] <globs ...>')
