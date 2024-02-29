@@ -11,7 +11,6 @@ import {fileURLToPath} from 'url';
 
 function parseArgs() {
     program
-        .version('2.0.0')
         .usage('[options] <globs ...>')
         .option('-s, --stats', 'Show statistics')
         .option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items => items.split(','))
