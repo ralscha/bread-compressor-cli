@@ -11,6 +11,7 @@ import {fileURLToPath} from 'url';
 
 function parseArgs() {
     program
+        .version('3.0.2')
         .usage('[options] <globs ...>')
         .option('-s, --stats', 'Show statistics')
         .option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli" and "gzip". Default "brotli,gzip"', items => items.split(','))
@@ -20,8 +21,9 @@ function parseArgs() {
         .option('--zopfli-blocksplittinglast <value>', 'If "true", chooses the optimal block split points only after doing the iterative LZ77 compression. If "false", chooses the block split points first, then does iterative LZ77 on each individual block. If "both", first runs with false, then with true and keeps the smaller file. Default "false"')
         .option('--brotli-mode <value>', '0 = generic, 1 = text (default), 2 = font (WOFF2)', parseInt)
         .option('--brotli-quality <value>', '0 - 11. Default 11', parseInt)
-        .option('--brotli-lgwin <value>', 'Window size. Default 22', parseInt)
-        .parse(process.argv);
+        .option('--brotli-lgwin <value>', 'Window size. Default 22', parseInt);
+
+    program.parse();
 }
 
 function addDefaultIgnores() {
