@@ -73,8 +73,8 @@ async function zopfliPromisify(content, options) {
 }
 
 process.on('message', async (message) => {
-    const file = await zopfliCompressFile(message.name, message.options);
-    process.send(file);
+    const fileSize = await zopfliCompressFile(message.name, message.options);
+    process.send(fileSize);
 });
 
 process.send({ready: true});

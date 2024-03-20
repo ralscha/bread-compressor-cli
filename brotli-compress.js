@@ -35,8 +35,8 @@ async function brotliCompressFile(file, options) {
 }
 
 process.on('message', async (message) => {
-    const file = await brotliCompressFile(message.name, message.options);
-    process.send(file);
+    const fileSize = await brotliCompressFile(message.name, message.options);
+    process.send(fileSize);
 });
 
 process.send({ready: true});

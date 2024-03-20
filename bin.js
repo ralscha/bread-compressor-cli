@@ -2,4 +2,4 @@
 
 import {compress} from './index.js';
 
-compress('gzip').then(() => compress('brotli')).catch(console.log);
+compress('gzip').then(() => compress('brotli')).then(() => compress("zstd")).catch(console.log);
