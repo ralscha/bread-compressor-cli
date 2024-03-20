@@ -26,7 +26,7 @@ npm run compress
 
 
 #### Ignores
-The tool ignores by default files with the suffix .gz, .br, .zip, .png, .jpeg, .jpg, .woff and .woff2.
+The tool ignores by default files with the suffix .gz, .br, .zst, .zip, .png, .jpeg, .jpg, .woff and .woff2.
 You can disable this with the `-n` option and all files will be compressed.
 ```
 bread-compressor -n dist
@@ -59,16 +59,16 @@ https://github.com/sindresorhus/globby
 
 #### Algorithm
 The tool compresses the files by default with gzip and brotli. You can set the `-a` option 
-if you only want to compress with gzip or brotli.
+to specify which algorithm to use. The -a options expects a comma separated list of algorithms.
 
-Compress only with gzip
+Compress with gzip only
 ```
 bread-compressor -a gzip dist
 ```
 
-Compress only with brotli
+Compress with brotli and zstandard
 ```
-bread-compressor -a brotli dist
+bread-compressor -a brotli,zstd dist
 ```
 
 
@@ -115,6 +115,14 @@ bread-compressor --brotli-mode=0 --brotli-quality=10 --brotli-lgwin=21 dist
 
 See the project site of [brotli](https://www.npmjs.com/package/brotli) for more information.
 
+#### Zstandard options
+You can pass options to the underlying zstd-wasm library. 
+
+```
+bread-compressor --zstd-level=10 -a zstd dist
+```
+
+See the project site of [zstd-wasm](https://github.com/bokuweb/zstd-wasm)
 
 #### Concurrent tasks
 By default, two tasks will run concurrently. You can change this number with the `-l` option
@@ -126,8 +134,9 @@ bread-compressor -l 4 dist
 
 
 ## Internals
-This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) and [node-zopfli-es](https://github.com/jaeh/node-zopfli-es) for GZip compression
-and [brotli](https://www.npmjs.com/package/brotli) and [iltorb](https://github.com/MayhemYDG/iltorb) for Brotli compression.
+This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) and [node-zopfli-es](https://github.com/jaeh/node-zopfli-es) for GZip compression, 
+[brotli](https://www.npmjs.com/package/brotli) for Brotli compression and [zstd-wasm](https://github.com/bokuweb/zstd-wasm) 
+for Zstandard compression.
 
 Other dependecies are [commander](https://github.com/tj/commander.js) for command line argument parsing, [chalk](https://github.com/chalk/chalk) for terminal output styling,  [globby](https://github.com/sindresorhus/globby) for glob matching and [promise-limit](https://github.com/featurist/promise-limit) for limiting concurrent tasks. 
 
@@ -143,6 +152,13 @@ Support introduced in version ...
   * Firefox 44
   * Chrome 50
   * Safari 11
+
+
+## Browser Support for Zstandard
+
+  * Chrome 123
+
+https://caniuse.com/zstd
 
 
 ## Server support
