@@ -1,7 +1,7 @@
 {
   "name": "bread-compressor-cli",
   "type": "module",
-  "version": "3.1.0",
+  "version": "3.1.2",
   "description": "CLI tool compressing static resources with Brotli, Zopfli (gzip) and Zstandard (zst)",
   "license": "MIT",
   "repository": {

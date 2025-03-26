@@ -13,8 +13,9 @@ function parseArgs() {
     let intParseFunc = (n) => parseInt(n);
     if (Object.keys(program.opts()).length === 0) {
         program
-            .version('3.1.0')
-            .usage('[options] <globs ...>')
+            .version('3.1.2')
+            .allowExcessArguments()
+            .usage('[options] <paths ...>')
             .option('-s, --stats', 'Show statistics')
             .option('-a, --algorithm <items>', 'Comma separated list of compression algorithms. Supported values are "brotli", "gzip" and "zstd". Default "brotli,gzip"', items => items.split(','))
             .option('-n, --no-default-ignores', 'Do not add default glob ignores')
