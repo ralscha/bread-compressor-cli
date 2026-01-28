@@ -29,6 +29,6 @@
     "promise-limit": "2.7.0"
   },
   "optionalDependencies": {
-    "node-zopfli-es": "2.0.4"
+    "node-zopfli-es": "2.0.5"
   }
 }
