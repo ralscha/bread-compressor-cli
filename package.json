@@ -24,11 +24,11 @@
     "@gfx/zopfli": "1.0.15",
     "brotli": "1.3.3",
     "chalk": "5.6.2",
-    "commander": "14.0.2",
-    "globby": "16.0.0",
+    "commander": "14.0.3",
+    "globby": "16.1.1",
     "promise-limit": "2.7.0"
   },
   "optionalDependencies": {
-    "node-zopfli-es": "2.0.4"
+    "node-zopfli-es": "2.0.5"
   }
 }
