@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as util from "util";
-import {zopfliAdapter} from "./zopfli-adapter.js";
+import zopfli from "@gfx/zopfli";
 
 
 const readFile = util.promisify(fs.readFile);
@@ -60,7 +60,6 @@ async function zopfliCompressFile(file, options) {
 }
 
 async function zopfliPromisify(content, options) {
-    const zopfli = await zopfliAdapter();
     return new Promise((resolve, reject) => {
         zopfli.gzip(content, options, (err, compressedContent) => {
             if (!err) {

@@ -34,7 +34,7 @@ bread-compressor -n dist
 
 
 #### Glob
-You can specify multiple paths in one call, the tool processes all files that match the globs.
+You can specify multiple paths in one call. The CLI supports directory paths, `*`, `**`, `?` and leading `!` exclude patterns.
 
 Compress files in *dist* and *www* folder and subfolders.
 ``` 
@@ -52,10 +52,6 @@ Compress files in *dist* folder and subfolder, except *big.txt* and files ending
 ```
 bread-compressor dist "!big.txt" "!*.pdf"
 ```
-
-See the globby project site for more information about the supported glob patterns:    
-https://github.com/sindresorhus/globby
-
 
 #### Algorithm
 The tool compresses the files by default with gzip and brotli. You can set the `-a` option 
@@ -125,7 +121,7 @@ bread-compressor --zstd-level=10 -a zstd dist
 See the project site of [zstd-wasm](https://github.com/bokuweb/zstd-wasm)
 
 #### Concurrent tasks
-By default, two tasks will run concurrently. You can change this number with the `-l` option
+By default, the CLI runs as many tasks concurrently as there are CPU cores. You can change this number with the `-l` option.
 
 Run 4 compression tasks concurrently.
 ```
@@ -134,11 +130,11 @@ bread-compressor -l 4 dist
 
 
 ## Internals
-This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) and [node-zopfli-es](https://github.com/jaeh/node-zopfli-es) for GZip compression, 
+This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for GZip compression, 
 [brotli](https://www.npmjs.com/package/brotli) for Brotli compression and [zstd-wasm](https://github.com/bokuweb/zstd-wasm) 
 for Zstandard compression.
 
-Other dependecies are [commander](https://github.com/tj/commander.js) for command line argument parsing, [chalk](https://github.com/chalk/chalk) for terminal output styling,  [globby](https://github.com/sindresorhus/globby) for glob matching and [promise-limit](https://github.com/featurist/promise-limit) for limiting concurrent tasks. 
+Command line parsing, terminal styling, glob expansion and concurrency limiting are implemented directly in this project to keep the dependency footprint small.
 
 
 
