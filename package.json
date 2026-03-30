@@ -18,6 +18,9 @@
     "gzip",
     "zstandard"
   ],
+  "scripts": {
+    "test": "node --test"
+  },
   "main": "index.js",
   "dependencies": {
     "@bokuweb/zstd-wasm": "0.0.27",
