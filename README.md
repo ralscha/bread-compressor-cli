@@ -99,6 +99,13 @@ You can pass options to the underlying zopfli library.
 bread-compressor --zopfli-numiterations=15 --zopfli-blocksplittinglast=true dist
 ```
 
+To use the [zopfli-go](https://github.com/ralscha/zopfli-go) release binary instead of the JavaScript implementation for gzip compression, enable `--use-zopfli-go`.
+On first use this downloads a platform-specific binary from GitHub releases and caches it for future runs.
+
+```
+bread-compressor --use-zopfli-go --zopfli-numiterations=15 --zopfli-blocksplittinglast=both dist
+```
+
 See the project site of [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for more information.
 
 
@@ -133,6 +140,8 @@ bread-compressor -l 4 dist
 This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for GZip compression, 
 [brotli](https://www.npmjs.com/package/brotli) for Brotli compression and [zstd-wasm](https://github.com/bokuweb/zstd-wasm) 
 for Zstandard compression.
+
+When `--use-zopfli-go` is enabled, the gzip path uses a cached [zopfli-go](https://github.com/ralscha/zopfli-go) binary downloaded from GitHub releases instead of `@gfx/zopfli`.
 
 Command line parsing, terminal styling, glob expansion and concurrency limiting are implemented directly in this project to keep the dependency footprint small.
 

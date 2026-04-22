@@ -4,6 +4,7 @@ import {dirname} from "path";
 import * as os from "os";
 import {fork} from "child_process";
 import {fileURLToPath} from 'url';
+import {runZopfliGoCompression} from './zopfli-go-binary.js';
 
 const VERSION = '4.0.0';
 const DEFAULT_IGNORES = ['gz', 'br', 'zst', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2'];
@@ -28,6 +29,7 @@ Options:
   -a, --algorithm <items>               Comma separated list of algorithms: brotli,gzip,zstd
   -n, --no-default-ignores              Do not add default glob ignores
   -l, --limit <value>                   Number of concurrent tasks, defaults to CPU cores
+    --use-zopfli-go                       Use the zopfli-go gzip binary (downloads and caches a GitHub release binary on first use)
   --zopfli-numiterations <value>        Maximum LZ77 optimization iterations, default 15
   --zopfli-blocksplittinglast <value>   false, true, or both
   --brotli-mode <value>                 0 = generic, 1 = text, 2 = font
@@ -76,6 +78,7 @@ function parseArgs() {
         defaultIgnores: true,
         limit: null,
         stats: false,
+        useZopfliGo: false,
         zopfliBlocksplittinglast: undefined,
         zopfliNumiterations: null,
         zstdLevel: null
@@ -106,6 +109,11 @@ function parseArgs() {
 
         if (token === '-n' || token === '--no-default-ignores') {
             options.defaultIgnores = false;
+            continue;
+        }
+
+        if (token === '--use-zopfli-go') {
+            options.useZopfliGo = true;
             continue;
         }
 
@@ -432,26 +440,30 @@ export async function compress(algorithm) {
             });
         })));
     } else {
-        const gzOptions = {
-            numiterations: options.zopfliNumiterations != null ? options.zopfliNumiterations : 15,
-            zopfliBlocksplittinglast: options.zopfliBlocksplittinglast,
-        };
-        results = await Promise.all(paths.map(name => limit(() => {
-            return new Promise(function (resolve) {
-                const __dirname = dirname(fileURLToPath(import.meta.url));
-                const child = fork(path.resolve(__dirname, 'gzip-compress.js'));
-                child.on('message', msg => {
-                    if (msg.ready) {
-                        child.send({name: name, options: gzOptions});
+        if (options.useZopfliGo) {
+            results = await runZopfliGoCompression(paths, options);
+        } else {
+            const gzOptions = {
+                numiterations: options.zopfliNumiterations != null ? options.zopfliNumiterations : 15,
+                zopfliBlocksplittinglast: options.zopfliBlocksplittinglast,
+            };
+            results = await Promise.all(paths.map(name => limit(() => {
+                return new Promise(function (resolve) {
+                    const __dirname = dirname(fileURLToPath(import.meta.url));
+                    const child = fork(path.resolve(__dirname, 'gzip-compress.js'));
+                    child.on('message', msg => {
+                        if (msg.ready) {
+                            child.send({name: name, options: gzOptions});
 
-                        child.on('message', (message) => {
-                            child.kill();
-                            resolve(message);
-                        });
-                    }
+                            child.on('message', (message) => {
+                                child.kill();
+                                resolve(message);
+                            });
+                        }
+                    });
                 });
-            });
-        })));
+            })));
+        }
     }
 
     if (options.stats && results && results.length > 0) {
