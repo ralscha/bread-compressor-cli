@@ -143,6 +143,30 @@ test('prints help text', async () => {
     assert.match(stdout, /--use-zopfli-go/);
 });
 
+test('rejects unknown algorithms', async () => {
+    await assert.rejects(
+        runCli(['-a', 'gzip,unknown', 'dist']),
+        error => {
+            assert.equal(error.code, 1);
+            assert.equal(error.stdout, '');
+            assert.match(error.stderr, /Invalid algorithm: unknown/);
+            return true;
+        }
+    );
+});
+
+test('rejects malformed integer options', async () => {
+    await assert.rejects(
+        runCli(['--limit=2x', 'dist']),
+        error => {
+            assert.equal(error.code, 1);
+            assert.equal(error.stdout, '');
+            assert.match(error.stderr, /Invalid value for --limit: 2x/);
+            return true;
+        }
+    );
+});
+
 test('compresses a file with gzip only', async () => {
     const {filePath} = await createCompressibleFixture();
 

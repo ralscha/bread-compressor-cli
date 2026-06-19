@@ -6,7 +6,9 @@ import {fork} from "child_process";
 import {fileURLToPath} from 'url';
 import {runZopfliGoCompression} from './zopfli-go-binary.js';
 
-const VERSION = '4.0.0';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const VERSION = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')).version;
+const VALID_ALGORITHMS = ['brotli', 'gzip', 'zstd'];
 const DEFAULT_IGNORES = ['gz', 'br', 'zst', 'zip', 'png', 'jpeg', 'jpg', 'woff', 'woff2'];
 const STYLE_CODES = {
     blue: '\u001B[34m',
@@ -44,8 +46,8 @@ function exitAfterOutput(output, code = 0) {
 }
 
 function parseIntegerOption(name, value) {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isNaN(parsed)) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed)) {
         throw new Error(`Invalid value for ${name}: ${value}`);
     }
     return parsed;
@@ -178,6 +180,17 @@ function parseArgs() {
         }
 
         args.push(token);
+    }
+
+    if (options.algorithm != null) {
+        const invalidAlgorithms = options.algorithm.filter(item => !VALID_ALGORITHMS.includes(item));
+        if (invalidAlgorithms.length > 0) {
+            throw new Error(`Invalid algorithm: ${invalidAlgorithms.join(', ')}. Expected one or more of: ${VALID_ALGORITHMS.join(', ')}`);
+        }
+    }
+
+    if (options.limit != null && options.limit < 1) {
+        throw new Error(`Invalid value for --limit: ${options.limit}`);
     }
 
     parsedArgsCache = {args, options};
@@ -374,6 +387,40 @@ function styleText(text, ...styles) {
     return `${styles.map(style => STYLE_CODES[style]).join('')}${stringValue}${STYLE_CODES.reset}`;
 }
 
+function runCompressionWorker(scriptName, name, options) {
+    return new Promise((resolve, reject) => {
+        const child = fork(path.resolve(__dirname, scriptName));
+        let settled = false;
+
+        function settle(callback, value) {
+            if (settled) {
+                return;
+            }
+
+            settled = true;
+            child.kill();
+            callback(value);
+        }
+
+        child.on('message', message => {
+            if (message.ready) {
+                child.send({name, options});
+                return;
+            }
+
+            settle(resolve, message);
+        });
+        child.on('error', error => settle(reject, error));
+        child.on('exit', (code, signal) => {
+            if (settled) {
+                return;
+            }
+
+            settle(reject, new Error(`${scriptName} exited before reporting a result (${signal || code})`));
+        });
+    });
+}
+
 export async function compress(algorithm) {
     const {args, options} = parseArgs();
     if (args.length === 0) {
@@ -402,43 +449,12 @@ export async function compress(algorithm) {
             quality: options.brotliQuality != null ? options.brotliQuality : 11,
             lgwin: options.brotliLgwin != null ? options.brotliLgwin : 22
         };
-        results = await Promise.all(paths.map(name => limit(() => {
-            return new Promise(function (resolve) {
-                const __dirname = dirname(fileURLToPath(import.meta.url));
-                const child = fork(path.resolve(__dirname, 'brotli-compress.js'));
-
-                child.on('message', msg => {
-                    if (msg.ready) {
-                        child.send({name: name, options: brotliOptions});
-
-                        child.on('message', (message) => {
-                            child.kill();
-                            resolve(message);
-                        });
-                    }
-                });
-            });
-        })));
+        results = await Promise.all(paths.map(name => limit(() => runCompressionWorker('brotli-compress.js', name, brotliOptions))));
     } else if (algorithm === 'zstd') {
         const zstdOptions = {
             level: options.zstdLevel != null ? options.zstdLevel : 3
         };
-        results = await Promise.all(paths.map(name => limit(() => {
-            return new Promise(function (resolve) {
-                const __dirname = dirname(fileURLToPath(import.meta.url));
-                const child = fork(path.resolve(__dirname, 'zstd-compress.js'));
-                child.on('message', msg => {
-                    if (msg.ready) {
-                        child.send({name: name, options: zstdOptions});
-
-                        child.on('message', (message) => {
-                            child.kill();
-                            resolve(message);
-                        });
-                    }
-                });
-            });
-        })));
+        results = await Promise.all(paths.map(name => limit(() => runCompressionWorker('zstd-compress.js', name, zstdOptions))));
     } else {
         if (options.useZopfliGo) {
             results = await runZopfliGoCompression(paths, options);
@@ -447,22 +463,7 @@ export async function compress(algorithm) {
                 numiterations: options.zopfliNumiterations != null ? options.zopfliNumiterations : 15,
                 zopfliBlocksplittinglast: options.zopfliBlocksplittinglast,
             };
-            results = await Promise.all(paths.map(name => limit(() => {
-                return new Promise(function (resolve) {
-                    const __dirname = dirname(fileURLToPath(import.meta.url));
-                    const child = fork(path.resolve(__dirname, 'gzip-compress.js'));
-                    child.on('message', msg => {
-                        if (msg.ready) {
-                            child.send({name: name, options: gzOptions});
-
-                            child.on('message', (message) => {
-                                child.kill();
-                                resolve(message);
-                            });
-                        }
-                    });
-                });
-            })));
+            results = await Promise.all(paths.map(name => limit(() => runCompressionWorker('gzip-compress.js', name, gzOptions))));
         }
     }
 

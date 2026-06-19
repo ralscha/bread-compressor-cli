@@ -1,4 +1,4 @@
-Command line tool for compressing static resources with brotli and gzip. 
+Command line tool for compressing static resources with Brotli, Zopfli gzip and Zstandard.
 
 
 ## Installation
@@ -54,7 +54,7 @@ bread-compressor dist "!big.txt" "!*.pdf"
 ```
 
 #### Algorithm
-The tool compresses the files by default with gzip and brotli. You can set the `-a` option 
+The tool compresses files with gzip and Brotli by default. You can set the `-a` option
 to specify which algorithm to use. The -a options expects a comma separated list of algorithms.
 
 Compress with gzip only
@@ -110,13 +110,13 @@ See the project site of [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js
 
 
 #### Brotli options
-You can pass options to the underlying brotli library. 
+You can pass options to Node.js' built-in Brotli compressor.
 
 ```
 bread-compressor --brotli-mode=0 --brotli-quality=10 --brotli-lgwin=21 dist
 ```
 
-See the project site of [brotli](https://www.npmjs.com/package/brotli) for more information.
+See the [Node.js zlib Brotli documentation](https://nodejs.org/api/zlib.html#brotli-constants) for more information.
 
 #### Zstandard options
 You can pass options to the underlying zstd-wasm library. 
@@ -137,8 +137,8 @@ bread-compressor -l 4 dist
 
 
 ## Internals
-This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for GZip compression, 
-[brotli](https://www.npmjs.com/package/brotli) for Brotli compression and [zstd-wasm](https://github.com/bokuweb/zstd-wasm) 
+This tool depends on [@gfx/zopfli](https://github.com/gfx/universal-zopfli-js) for GZip compression,
+Node.js' built-in `zlib` module for Brotli compression and [zstd-wasm](https://github.com/bokuweb/zstd-wasm)
 for Zstandard compression.
 
 When `--use-zopfli-go` is enabled, the gzip path uses a cached [zopfli-go](https://github.com/ralscha/zopfli-go) binary downloaded from GitHub releases instead of `@gfx/zopfli`.
@@ -168,7 +168,7 @@ https://caniuse.com/zstd
 
 ## Server support
 
-To take advantage of precompressed resources you need a server that is able to understand the `Accept-Encoding` header and serve files ending with `.gz` and `.br` accordingly.
+To take advantage of precompressed resources you need a server that is able to understand the `Accept-Encoding` header and serve files ending with `.gz`, `.br` and, if you use Zstandard, `.zst` accordingly.
 
 #### Nginx 
 Nginx supports Gzip compressed files out of the box with the `gzip_static` directive. 
