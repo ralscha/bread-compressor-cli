@@ -1,7 +1,7 @@
 {
   "name": "bread-compressor-cli",
   "type": "module",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "CLI tool compressing static resources with Brotli, Zopfli (gzip) and Zstandard (zst)",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,7 @@
   "zopfliGoBinary": {
     "owner": "ralscha",
     "repo": "zopfli-go",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "binaryName": "zopfli-go",
     "tagPrefix": "v",
     "assetNameTemplate": "{{binary}}_{{version}}_{{os}}_{{arch}}{{archiveExtension}}"
